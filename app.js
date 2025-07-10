@@ -1,10 +1,10 @@
 const express = require('express');
 const app = express();
 
-app.set('view engine', 'ejs');
+app.set('view engine', 'ejs'); //set engine
 
-app.get('/', (req, res) => {
-  res.render('index'); 
+app.get('/', (req, res) => {  
+  res.render('view/index');  
 });
 
 app.listen(3000, () => {
