@@ -20,13 +20,13 @@ app.get('/captcha', (req,res) => {
   res.send(captcha.data)
 })
 
-app.all('/webboard/newquestion', (req,res) => {
+app.all('/webboard/new-question', (req,res) => {
   if (req.method == 'GET') { 
-    response.render('new-question')
+    res.render('new-question')
     return
   }
   let form = new formidable.IncomingForm()
-  form.parse(req,(err ,filelds,flies)=>{
+  form.parse(req,(err ,fields, files)=>{
     res.render('new-question',{
       msg : 'try agin', data:fields
     })
@@ -37,7 +37,7 @@ app.all('/webboard/newquestion', (req,res) => {
   let imgFile  = upfile.name
 
   if (imgFile != ''){
-    const dir = 'pubilc/webboard-images/'
+    const dir = 'public/webboard-images/'
     let oldName = imgFile.split('.')
     oldName[0] = new Date().getTime()
     imgFile = oldName.join('.')
@@ -50,13 +50,37 @@ app.all('/webboard/newquestion', (req,res) => {
   let data = {
     question: fields.question,
     detail: fields.detail,
-    qusetioner : fields.qusetioner,
+    questioner : fields.qusetioner,
     date_posted: new Date(),
     num_answer: 0,
     image_file: imgFile
   }
-  Question.crate(data,(err,doc)=>{
+  Question.create(data,(err,doc)=>{
     res.redirect('/webboard/show-all-questions')
+  })
+})
+
+app.get('/webboard/show-all-question',(req,res)=>{
+  let q = Question.find().sort('-date_posted')
+  let options = { page: req.query.page || 1,limit: 3}
+  Question.paginate(package,options,(err,result) =>{
+    let links = []
+    if (result.page > 1) {
+      links.push(`<a href="${req.path}?page=1">First page</a>`)
+    }
+    if (result.hasPrevPage){
+      links.push(`<a href="${req.path}?page=${result.prevPage}">Previous page</a>`)
+    }
+    if (result.hasNextPage){
+      links.push(`<a href="${req.path}?page=${result.nextPage}"> Next page</a>`)
+    }
+    if (result.page < result.totalPages){
+      links.push(`<a href="${req.path}?page=${result.totalPages}">Last page</a>`)
+    }
+    let pageLink = links.join(' - ')
+    res.render('show-all-questions',
+      { data: result.docs,pageLink:pageLink}
+    )    
   })
 })
 
